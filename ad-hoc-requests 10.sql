@@ -6,15 +6,14 @@ QUESTION 10
 
 
 
-  SELECT M.division,M.product_code,M.product,M.sold_quantity,M.rank_order
+  SELECT M.division,M.product_code,M.product,M.total_sold_quantity AS total_sold_quantity ,M.rank_order
  FROM
-  (SELECT x.*
- FROM
-   (SELECT DP.division,F.Product_code,DP.product,F.Fiscal_year,F.sold_quantity,
- ROW_NUMBER () OVER (PARTITION BY division ORDER BY sold_quantity DESC) AS rank_order
- FROM fact_sales_monthly F
- JOIN dim_product DP
- ON F.product_code = dp.product_code
- WHERE f.fiscal_year = '2021'
-   )x
-   WHERE x.rank_order<= 3)M
+ (SELECT DP.division,F.Product_code,DP.product,F.Fiscal_year,SUM(F.sold_quantity) as total_sold_quantity,
+	 ROW_NUMBER () OVER (PARTITION BY DP.division ORDER BY SUM(F.sold_quantity) DESC) AS rank_order
+ 	FROM fact_sales_monthly F
+ 	JOIN dim_product DP
+ 	ON F.product_code = dp.product_code
+ 	WHERE f.fiscal_year = '2021'
+	 GROUP BY DP.division,F.Product_code,DP.product,F.Fiscal_year
+   )M
+   WHERE m.rank_order<= 3
